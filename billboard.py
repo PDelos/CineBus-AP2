@@ -34,12 +34,20 @@ def read() -> Billboard:
 	data_movie_list:list[dict]=[]
 	data_times_list:list[list]=[]
 	original_version_list:list[str]=[]
+	theatre_address:list[str,str]={}
 
 	for i in range(1,4):
 		urlToScrape = "https://www.sensacine.com/cines/cines-en-72480/?page=" + str(i)
 		r = requests.get(urlToScrape)
 		soup = BeautifulSoup(r.content, "html.parser")
 		item_resa_elements = soup.find_all("div", class_="item_resa")
+		
+		cinema_info=soup.find_all('a', class_='j_entities')
+		span_address = soup.find_all('span', class_='lighten')
+
+		for i,cinema in enumerate(cinema_info):
+			cinema_id=json.loads(cinema["data-entities"])["entityId"]
+			theatre_address[cinema_id]=span_address[2*i+1].get_text(strip=True)
 
 		for item in item_resa_elements:
 			jw_div=item.find('div', class_='j_w')
@@ -57,7 +65,7 @@ def read() -> Billboard:
 	
 	
 	films_list=[Film(title=film['title'],genre=film['genre'],director=film['directors'],actors=film['actors']) for film in data_movie_list]
-	theater_list=[Cinema(name=cinema['name'],address=cinema['city']) for cinema in data_theater_list]
+	theater_list=[Cinema(name=cinema['name'],address=theatre_address[cinema['id']]) for cinema in data_theater_list]
 	projection_list=[]
 	for i,film_times in enumerate(data_times_list):
 		for curr_time in film_times:
