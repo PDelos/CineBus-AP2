@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from typing import TypeAlias
 import networkx as nx
 import matplotlib.pyplot as plt
+from staticmap import StaticMap, CircleMarker, Line
+import math
 
 
 BusesGraph : TypeAlias = nx.Graph
@@ -75,6 +77,24 @@ def show(graph: BusesGraph) -> None:
     plt.show()
 
 
+def generate_map_with_graph(network: NetworkBus) -> None:
+    # Create a new map object
+    barcelona = StaticMap(800, 600)
+    barcelona.center = (2.1734, 41.3851)
+
+    # Add a marker at a specific location in Barcelona
+    for i, line in zip(range(1), network.busLines()):
+        for s in line.stops():
+            barcelona.add_marker(CircleMarker((s.pos[1], s.pos[0]), '#FF0000', 1))
+
+        for src, dst in zip(line.stops(), line.stops()[1:]):
+            if src.name == dst.name: continue
+            # Add a line to represent the graph
+            barcelona.add_line(Line([(src.pos[1], src.pos[0]), (dst.pos[1], dst.pos[0])], '#0000FF', 1))
+    
+    image = barcelona.render()
+    image.save("barcelona_map.png")
+
 if __name__ == '__main__':
     # URL of the JSON file
     url = 'https://www.ambmobilitat.cat/OpenData/ObtenirDadesAMB.json'
@@ -90,5 +110,7 @@ if __name__ == '__main__':
 
     #CREATE GRAPH USING NETWORKX LIBRARY
     graphBusNetwork = get_buses_graph(network)
-    show(graphBusNetwork)
+    #show(graphBusNetwork)
+    generate_map_with_graph(network)
+
         
