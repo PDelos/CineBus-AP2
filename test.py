@@ -6,7 +6,7 @@ from yogi import read
 from haversine import haversine
 import json
 
-BusesGraph : TypeAlias = nx.Graph
+BusesGraph : TypeAlias = nx.DiGraph
 Coord : TypeAlias = tuple[float, float]   # (latitude, longitude)
 
 @dataclass
@@ -35,6 +35,26 @@ class BusLine:
 
     def setRoute(self, route: list[Coord]) -> None:
         self._busRoute = route
+
+    def mergeStopsRoute(self) -> None:
+        for s in self.stops():
+            #get index of closest point of route
+            i: int = min(range(len(self.route())), key=lambda i: dist(s.pos, self.route()[i]))
+            #what is better insert in i or insert i+1 ?
+            route = self.route()
+            dist_1 = (
+                dist(route[i-1], s.pos) + dist(s.pos, route[i]) + dist(route[i], route[i+1])
+                if i < len(route) - 1 and i > 0
+                else float('inf')
+            ) #importa poc quan es inici o final de ruta
+            dist_2 = (
+                dist(route[i], s.pos) + dist(s.pos, route[i+1]) + dist(route[i-1], route[i])
+                if i < len(route) - 1 and i > 0
+                else float('inf')
+            ) #importa poc quan es inici o final de ruta
+
+            self.route().insert(i if dist_1 < dist_2 else i+1, s.pos)
+
 
     def id(self) -> int:
         return self._id
@@ -69,6 +89,8 @@ class NetworkBus:
 
 
 
+def dist(x: Coord, y: Coord) -> float:  #lon, lat
+    return haversine((x[1], x[0]), (y[1], y[0]), unit='m')  #lat, lon
 
 
 def format_and_overwrite_json(file_path: str) -> None:
@@ -97,6 +119,7 @@ def create_network_base() -> NetworkBus:
         NewLine = BusLine(id, name)
         BcnNetwork.addBusLine(NewLine)
     return BcnNetwork
+
 
 def get_route_json(json_file: str, BcnNetwork: NetworkBus) -> NetworkBus:
     with open(json_file, "r") as file:
@@ -135,25 +158,11 @@ def get_stops_json(json_file: str, BcnNetwork: NetworkBus) -> NetworkBus:
         #find all stops related to that route
         stops: list[tuple[int, Coord]] = fetch_stops(json_file, route_id)
         stops.sort(key = lambda x: x[0])
-        BcnNetwork.getBusLine(route_id).setStops([s[1] for s in stops])
+        BcnNetwork.getBusLine(route_id).setStops([s[1] for s in stops]) # set the stop of the bus lines
+        BcnNetwork.getBusLine(route_id).mergeStopsRoute() #merge stops into route (aka adds stops to the route)
     
     return BcnNetwork
 
-def generate_map_network(BcnNetwork: NetworkBus) -> None:
-    # Create a new map object
-    barcelona = stm.StaticMap(800, 600)
-    barcelona.center = (2.1734, 41.3851) #staticmap uses 
-
-    for busline in BcnNetwork.busLines().values(): #iterating over all buslines
-        #find all stops related to that route
-        for s in busline.stops():
-            marker = stm.CircleMarker(s.pos, 'red', 2)
-            barcelona.add_marker(marker)
-        route = stm.Line(busline.route(), 'black', 1)
-        barcelona.add_line(route)
-
-    image = barcelona.render()
-    image.save("barcelona_map.png")
 
 def generate_map_network(BcnNetwork: NetworkBus) -> None:
     # Create a new map object
@@ -170,22 +179,23 @@ def generate_map_network(BcnNetwork: NetworkBus) -> None:
 
     image = barcelona.render()
     image.save("barcelona_map.png")
+
 
 def generate_map_line(BcnNetwork: NetworkBus) -> None:
     # Create a new map object
     barcelona = stm.StaticMap(800, 600)
-    barcelona.center = (2.1734, 41.3851) #staticmap uses 
-
+    barcelona.center = (2.1734, 41.3851) #lon, lat
 
     #shows all rout_id and thier names:
     for id, busline in BcnNetwork.busLines().items():
         print(id, '--->', busline.name())
-    
     print('Please intput the id of the bus line you want to look at:')
+
     busline = BcnNetwork.busLines()[read(int)]
     for s in busline.stops():
         marker = stm.CircleMarker(s.pos, 'red', 2)
         barcelona.add_marker(marker)
+
     route = stm.Line(busline.route(), 'black', 1)
     barcelona.add_line(route)
 
@@ -194,25 +204,14 @@ def generate_map_line(BcnNetwork: NetworkBus) -> None:
 
 
 
-def dist(x: Coord, y: Coord) -> float:
-    return haversine(x, y, unit='m')
-
-def find_closest_index(p: Coord, route:list[Coord]) -> int:
-    return min(range(len(route)), key=lambda i: dist(p, route[i]))
-
-
-def graphDist(x: Coord, y:Coord, route:list[Coord]) -> float:
-    i: int = find_closest_index(x, route)
-    j: int = find_closest_index(y, route)
-    distance_xy: float = 0
-    for src, dst in zip(route[i:j+1], route[i+1:j+1]):
-        distance_xy += dist(src, dst)
-    return distance_xy
-
+def get_graph_dist(x: Coord, y: Coord, route: list[Coord]) -> float:
+    i: int = route.index(x) #could be imporved complexity
+    j: int = route.index(y) #could be imporved complexity
+    return sum(dist(src, dst) for src, dst in zip(route[i:j+1], route[i+1:j+1]))
 
 def get_buses_graph(BcnNetwork: NetworkBus) -> BusesGraph:
     BcnBusGraph = BusesGraph()
-    for busline in BcnNetwork.busLines().values():
+    for i, busline in zip([0], BcnNetwork.busLines().values()):
         #Add nodes to the graph
         for s in busline.stops():
             BcnBusGraph.add_node(s.name, address=s.address, pos=s.pos)
@@ -220,7 +219,8 @@ def get_buses_graph(BcnNetwork: NetworkBus) -> BusesGraph:
 
         for src, dst in zip(busline.stops(), busline.stops()[1:]):
             if src.name == dst.name: continue
-            BcnBusGraph.add_edge(src.name, dst.name, weight=graphDist(src.pos, dst.pos, busline.route()))
+            distance_between = get_graph_dist(src.pos, dst.pos, busline.route()) #using harversine
+            BcnBusGraph.add_edge(src.name, dst.name, weight=distance_between)
     return BcnBusGraph
 
 
@@ -228,10 +228,11 @@ if __name__ == '__main__':
     #format_and_overwrite_json("busRoutes.json")
     #format_and_overwrite_json("busStops.json")
 
+    #latitud es numero gran, longitud petit
     bcnNetwork = create_network_base()
     bcnNetwork = get_route_json("busRoutes.json", bcnNetwork)
     bcnNetwork = get_stops_json("busStops.json", bcnNetwork)
 
-    #generate_map_network(bcnNetwork)
-    #generate_map_line(bcnNetwork)
-    BcnBusGraph = get_buses_graph(bcnNetwork)
+    #generate_map_network(bcnNetwork) #genera el mapa amb tot
+    #generate_map_line(bcnNetwork) #genera el mapa de una linea
+    BcnBusGraph = get_buses_graph(bcnNetwork) #genera el graph (dirigit amb weight = distancia que fa el bus)
