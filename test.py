@@ -211,7 +211,7 @@ def get_graph_dist(x: Coord, y: Coord, route: list[Coord]) -> float:
 
 def get_buses_graph(BcnNetwork: NetworkBus) -> BusesGraph:
     BcnBusGraph = BusesGraph()
-    for i, busline in zip([0], BcnNetwork.busLines().values()):
+    for busline in BcnNetwork.busLines().values():
         #Add nodes to the graph
         for s in busline.stops():
             BcnBusGraph.add_node(s.name, address=s.address, pos=s.pos)
