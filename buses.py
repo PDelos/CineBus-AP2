@@ -53,7 +53,19 @@ class NetworkBus:
         return self._busLines
 
 
-def get_buses_graph(network: NetworkBus) -> BusesGraph:
+def get_buses_graph() -> BusesGraph:
+
+    url = 'https://www.ambmobilitat.cat/OpenData/ObtenirDadesAMB.json'
+    AMBdata =  get(url).json()
+
+    #PROCESS JSON FILE
+    network = NetworkBus()
+    for line in AMBdata['ObtenirDadesAMBResult']['Linies']['Linia']:
+        lineBus = BusLine(line['Id'], line['Nom'])
+        for stop in line['Parades']['Parada']:
+            lineBus.addStop(Stop(stop['Nom'], stop['Adreca'], (float(stop['UTM_X']), float(stop['UTM_Y']))))
+        network.addLine(lineBus)
+
     # Create an empty graph
     graph = BusesGraph()
 
@@ -94,23 +106,3 @@ def generate_map_with_graph(network: NetworkBus) -> None:
     
     image = barcelona.render()
     image.save("barcelona_map.png")
-
-if __name__ == '__main__':
-    # URL of the JSON file
-    url = 'https://www.ambmobilitat.cat/OpenData/ObtenirDadesAMB.json'
-    AMBdata =  get(url).json()
-
-    #PROCESS JSON FILE
-    network = NetworkBus()
-    for line in AMBdata['ObtenirDadesAMBResult']['Linies']['Linia']:
-        lineBus = BusLine(line['Id'], line['Nom'])
-        for stop in line['Parades']['Parada']:
-            lineBus.addStop(Stop(stop['Nom'], stop['Adreca'], (float(stop['UTM_X']), float(stop['UTM_Y']))))
-        network.addLine(lineBus)
-
-    #CREATE GRAPH USING NETWORKX LIBRARY
-    graphBusNetwork = get_buses_graph(network)
-    #show(graphBusNetwork)
-    generate_map_with_graph(network)
-
-        
