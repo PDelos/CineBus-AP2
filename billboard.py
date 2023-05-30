@@ -35,6 +35,7 @@ def read() -> Billboard:
 	data_times_list:list[list]=[]
 	original_version_list:list[str]=[]
 	theatre_address:list[str,str]={}
+	processed_films:set[str,str]=set() #movie id, cine id (evitar repetits)
 
 	for i in range(1,4):
 		urlToScrape = "https://www.sensacine.com/cines/cines-en-72480/?page=" + str(i)
@@ -51,16 +52,22 @@ def read() -> Billboard:
 
 		for item in item_resa_elements:
 			jw_div=item.find('div', class_='j_w')
-			original_version_list.append("Original" if "Original" in str(jw_div) else "Doblada")
+	
 			data_theater = json.loads(jw_div['data-theater'])
-			data_theater_list.append(data_theater)
 			data_movie = json.loads(jw_div['data-movie'])
-			data_movie_list.append(data_movie)
-			data_times=[]
-			for time in item.find_all('em'):
-				item_times = json.loads(time['data-times'])
-				data_times.append(item_times)
-			data_times_list.append(data_times)
+			
+			if not (data_movie['id'],data_theater['id']) in processed_films:
+				processed_films.add((data_movie['id'],data_theater['id']))
+				original_version_list.append("Original" if "Original" in str(jw_div) else "Doblada")
+				data_theater_list.append(data_theater)
+				data_movie_list.append(data_movie)
+			
+				data_times=[]
+				for time in item.find_all('em'):
+					item_times = json.loads(time['data-times'])
+					data_times.append(item_times)
+			 
+				data_times_list.append(data_times)
 			
 	
 	
@@ -72,5 +79,17 @@ def read() -> Billboard:
 			projection_list.append(Projection(film=films_list[i],cinema=theater_list[i],time=(curr_time[0],curr_time[2]),language=original_version_list[i]))
 	return Billboard(films=films_list, cinemas=theater_list, projections=projection_list)
 
+def projection_by_film_name(name: str, billboard: Billboard) -> list[Projection]:
+	return [projection for projection in billboard.projections if name.lower() in projection.film.title.lower()]
 
-#read()
+def get_time_in_seconds(time: str) -> int:
+	return int(time[:2])*3600+int(time[3])*60+int(time[4])
+
+def projection_by_start_time(time: str, billboard: Billboard) -> list[Projection]:
+	time_in_secs=get_time_in_seconds(time)
+	return sorted(billboard.projections, key=lambda x:abs(get_time_in_seconds(x.time[0])-time_in_secs))
+
+
+'''billboard=read()
+name=input()
+print(projection_by_start_time(name,billboard))'''
