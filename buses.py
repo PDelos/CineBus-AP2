@@ -85,7 +85,7 @@ class NetworkBus:
     
     def getBusLine(self, id_route: int) -> dict[int, BusLine]:
         """ Given the id of a bus line, returns that busline if it is in network """
-        assert id_route in self.busLines(), str(id_route)+' not in network'
+        assert id_route in self.busLines(), str(id_route)+' not in network' #error message
         return self.busLines()[id_route]
 
 
@@ -105,7 +105,7 @@ def create_network_base() -> NetworkBus:
     # Iterating through each route and getting all information needed to inicialize the route, we add it to the NetworkBus class
     network = NetworkBus()
     for route in TMBdata['features']: # Iterating over routes in json file
-        id: str = str(route['properties']['ID_RECORREGUT'])
+        id: int = int(route['properties']['ID_RECORREGUT'])
         name: str = str(route['properties']['NOM_LINIA'] + ' - ' + route['properties']['DESC_PAQUET']+' ('+route['properties']['DESC_SENTIT']+")")
         color: str = str(route['properties']['COLOR_REC'])
         NewLine: BusLine = BusLine(id, name, color) # Create new busline
@@ -123,7 +123,7 @@ def get_route_json(json_file: str, network: NetworkBus) -> NetworkBus:
 
     # Iterating through we get the list of coordinates indicating the path the busline takes and adding them to the coorrespoinding bus line
     for route in TMBdata['features']: #iterating over routes in json file
-        id: str = str(route['properties']['ID_RECORREGUT'])
+        id: int = int(route['properties']['ID_RECORREGUT'])
         path: list[Coord] =  [tuple(lst) for lst in route['geometry']['coordinates'][0]] # We do this to avoid type errors
         network.getBusLine(id).setRoute(path)
         
@@ -140,7 +140,7 @@ def get_stops_json(json_file: str, network: NetworkBus) -> NetworkBus:
 
     # We iterate through the stops getting all the information we need to inicialize them. Then add them to the corresponding bus line
     for stop in TMBdata['features']:
-        id: int = stop['properties']['ID_RECORREGUT'] # id of the busroute to which the stop belongs
+        id: int = int(stop['properties']['ID_RECORREGUT']) # id of the busroute to which the stop belongs
         # We fetch all information we need to create stop
         code: str = str(stop['properties']['CODI_PARADA'])
         name: str = str(stop['properties']['NOM_PARADA'])
@@ -282,3 +282,6 @@ def plot_BusLine(g: BusesGraph, id_line: str, nom_fitxer: str) -> None:
     # Show image
     image = Image.open(nom_fitxer)
     image.show()
+
+g = get_buses_graph()
+show(g)
