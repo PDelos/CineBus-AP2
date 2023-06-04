@@ -34,26 +34,26 @@ tkinter
 ### Execució
 
 Per executar el programa cal la comanda ```python3 demo.py``` i tenir connexió a internet.
-En algunes ocasions es pot donar un error a l'executar el mòdul per una mala sincronització amb la web de la cartellera de cinemes de Barcelona, si això succeeix es pot tornar a provar d'executar el mòdul.
+En algunes ocasions es pot donar un error en executar el mòdul per una mala sincronització amb la web de la cartellera de cinemes de Barcelona, si això succeeix es pot tornar a provar d'executar el mòdul.
 
 ## Canvis respecte el projecte original
 
-Respecte la idea original de la pràctica s'han fet els següents canvis amb autorització del professorat:
+Respecte a la idea original de la pràctica s'han fet els següents canvis amb autorització del professorat:
 * S'ha considerat el graf de buses i de city com dirigit, per tal de simular de forma més acurada les rutes.
 * S'ha posat certa velocitat diferent en els trossos de ruta a peu i en bus, per tal de garantir que sempre s'agafa el camí més ràpid.
 * S'ha assignat un temps d'espera a cada parada, ja que agafar el bus de forma instantània no és realista.
-* S'ha agafat un json de AMB que conté informació real de les rutes dels busos, per tal de mostrar el recorregut real.
-* Hem utilizat una llibreria per mostrar el programa en una interfície gràfica i fer-lo més amigable i intuitiu per l'usuari.
+* S'ha agafat un json de AMB (https://developer.tmb.cat/data) que conté informació real de les rutes dels busos, per tal de mostrar el recorregut real.
+* Hem utilitzat una llibreria per mostrar el programa en una interfície gràfica i fer-lo més amigable i intuitiu per l'usuari.
 * S'ha implementat una funció per mostrar el recorregut d'una línia concreta de bus de Barcelona.
 * S'ha assignat el color corresponent a cada línia de bus.
 
 ### Instruccions
 
 Un cop tinguem la finestra principal del programa cal seguir els següents passos:
-* Premer els botons fetch buses i fetch city, que carreguen els grafs de busos i de la ciutat.
-* Seleccionar pelicula de la llista que apareixerà en el requadre superior, en cas de que no surti cap llista apretar el botó Update Movies.
+* Prémer els botons fetch buses i fetch city, que carreguen els grafs de busos i de la ciutat.
+* Seleccionar pel·lícula de la llista que apareixerà en el requadre superior, en cas que no surti cap llista prémer el botó Update Movies.
 * Si volem veure la película en versió original cal marcar la casella Original Language.
-* A continuació cal escriure l'adreça o les coordenades des d'on volem sortir per anar al cine i premer Find.
+* A continuació cal escriure l'adreça o les coordenades des d'on volem sortir per anar al cine i prémer Find.
 * Ens apareixerà una imatge amb la ruta que haurem de fer.
 
 ### Estil de codi
@@ -62,7 +62,7 @@ S'ha utilitzat el format estàndard PEP8 de python per formatejar el codi.
 
 ## Versió
 
-Aquesta és la verió 1.0 del projecte. 
+Aquesta és la versió 1.0 del projecte. 
 
 ## Autors
 
