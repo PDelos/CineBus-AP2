@@ -126,7 +126,7 @@ def get_films() -> dict[str, Film]:
 
     film_dict = dict()
 
-    for i in range(1, 3):
+    for i in range(1, 4):
 
         urlToScrape = "https://www.sensacine.com/cines/cines-en-72480/?page=" + \
             str(i)
