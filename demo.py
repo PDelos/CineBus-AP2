@@ -326,11 +326,11 @@ class MovieApp(tk.Tk):
         assert ox.geocode(address) != None, 'Location not found'
         location: Coord = ox.geocode(address)[::-1]
 
-        closest_projection: Coord = self.find_closest_projection(location)
-        assert closest_projection != (
-            -1, -1), 'Could not find a Cinema that offers your desiered film and language in time for you to get there'
+        #closest_projection: Coord = self.find_closest_projection(location)
+        #assert closest_projection != (
+        #    -1, -1), 'Could not find a Cinema that offers your desiered film and language in time for you to get there'
         path: city.Path = city.find_path(
-            self.CityGraph, location, closest_projection)
+            self.CityGraph, location, (2.15406, 41.40768))
         city.plot_path(self.CityGraph, path, 'path_to_cinema.png')
 
     def pos_lonlat(self, position: str) -> None:

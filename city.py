@@ -151,6 +151,14 @@ def plot_path(g: CityGraph, p: Path, filename: str) -> None:
     # Create a new map object
     barcelona = stm.StaticMap(3500, 3500)
 
+    # We add special markers for start and end
+    pos_start: Coord = (g.nodes[p[0]]['x'], g.nodes[p[0]]['y'])
+    marker_start = stm.IconMarker(pos_start, "start.png", 10, 30)
+    barcelona.add_marker(marker_start)
+    pos_end: Coord = (g.nodes[p[-1]]['x'], g.nodes[p[-1]]['y'])
+    marker_end = stm.IconMarker(pos, "end.png", 10, 20)
+    barcelona.add_marker(marker_end)
+
     # Add the lines connecting the nodes using the information in the edge u->v
     for u, v in zip(p, p[1:]):
         line = stm.Line(g[u][v]['route'], g[u][v]['color'], 6)
