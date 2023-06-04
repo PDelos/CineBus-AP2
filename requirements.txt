@@ -1,0 +1,14 @@
+requests
+bs4
+networkx 
+osmnx
+haversine
+staticmap 
+json
+matplotlib
+typing
+dataclasses
+PIL
+pickle
+datetime
+tkinter
