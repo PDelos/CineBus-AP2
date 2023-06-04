@@ -43,7 +43,7 @@ Un cop tinguem la finestra principal del programa cal seguir els següents passo
 * Seleccionar pel·lícula de la llista que apareixerà en el requadre superior, en cas que no surti cap llista prémer el botó Update Movies.
 * Si volem veure la película en versió original cal marcar la casella Original Language.
 * A continuació cal escriure l'adreça o les coordenades des d'on volem sortir per anar al cine i prémer Find.
-* Ens apareixerà una imatge amb la ruta que haurem de fer.
+* Ens apareixerà una imatge amb la ruta que haurem de fer, i en cas de qe no surti immediatament la podrem veure desada al mateix directori del programa amb nom path_to_cinema.png
 
 ## Canvis respecte el projecte original
 
