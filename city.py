@@ -36,20 +36,23 @@ def get_osmnx_graph() -> OsmnxGraph:
 				del(GraphBcn.nodes[node_id][attr])
 
 		# New information we whant to add to node
-		GraphBcn.nodes[node_id].update({'color' : '#000000'})
+		GraphBcn.nodes[node_id].update({'poblacio': 'Barcelona', 'color' : '#000000'})
 
 	# Iterating through edges
-	for u, v, edge_data in GraphBcn.edges(data = True):
+	for u, v, edge_data in list(GraphBcn.edges(data = True)):
+		if u == v: 
+			GraphBcn.remove_edge(u,v)
+			continue
+
 		# If not in edge_attributes we want to delete the atribute
 		for attr in list(edge_data):
 			if attr  not in edge_attributes:
 				del(GraphBcn[u][v][attr])
 		GraphBcn[u][v]['length'] /= 1.11 #length is now like time assuming we walk at 4km/h
-
 		# New information we whant to add to edge
 		u_pos: Coord = (GraphBcn.nodes[u]['x'], GraphBcn.nodes[u]['y'])
 		v_pos: Coord = (GraphBcn.nodes[v]['x'], GraphBcn.nodes[v]['y'])
-		GraphBcn[u][v].update({'color' : '#808080', 'route': [u_pos, v_pos]})
+		GraphBcn[u][v].update({'color' : '#000000', 'route': [u_pos, v_pos]})
 
 	return GraphBcn
 
@@ -81,22 +84,22 @@ def build_city_graph(bcn: OsmnxGraph, bus: BusesGraph) -> CityGraph:
 		edge_length = buses.dist(stop_pos, cruilla_pos) #harversine
 		
 		#Since it is directed we want to add both directions
-		city_graph.add_edge(cruilla_id, stop_id, route = [cruilla_pos, stop_pos], length = edge_length, color='#808080')
-		city_graph.add_edge(stop_id, cruilla_id, route = [stop_pos, cruilla_pos], length = edge_length, color='#808080')
+		city_graph.add_edge(cruilla_id, stop_id, route = [cruilla_pos, stop_pos], length = edge_length/1.11+3*60, color='#000000') #suposem 3 min de espera
+		city_graph.add_edge(stop_id, cruilla_id, route = [stop_pos, cruilla_pos], length = edge_length/1.11, color='#000000') #suposem 3 min de espera
 	
 	return city_graph
 	
 
-def find_path(ox_g: OsmnxGraph, g: CityGraph, src: Coord, dst: Coord) -> Path:
+def find_path(g: CityGraph, src: Coord, dst: Coord) -> Path:
 	""" Given a graph, and 2 points descrived by coordinates, returns the shortest using the graph. Coords: lon, lat """
-	src_nearest_node = ox.distance.nearest_nodes(ox_g,src[0],src[1]) #find the nearest node from src
-	dst_nearest_node = ox.distance.nearest_nodes(ox_g,dst[0],dst[1]) #find the nearest node from dst
+	src_nearest_node = ox.distance.nearest_nodes(g,src[0],src[1]) #find the nearest node from src
+	dst_nearest_node = ox.distance.nearest_nodes(g,dst[0],dst[1]) #find the nearest node from dst
 	return nx.shortest_path(g,src_nearest_node,dst_nearest_node, weight='length')
 
 def show(g: CityGraph) -> None:
 	""" Shows the directed graph using networkx.draw """
 	# We extrat the position of each node and create a dictionary
-	pos: dict[Any, float] = {node: (data['x'], data['y']) for node, data in g.nodes(data=True)}
+	pos: dict[Any, Coord] = {node: (data['x'], data['y']) for node, data in g.nodes(data=True)}
 	# Using the dictionary representing position we plot the graph
 	nx.draw(g, pos, with_labels=False, node_color='lightblue', edge_color='gray', node_size = 1)
 	plt.show()
@@ -104,19 +107,19 @@ def show(g: CityGraph) -> None:
 def plot(g: CityGraph, filename: str) -> None:
 	""" Saves and shows the graph as an image with the background city map in the specified file: filename, using staticmaps library """
 	# Create a new map object
-	barcelona = stm.StaticMap(800, 600)
-	barcelona.center = (2.1734, 41.3851) #staticmap uses 
-
+	barcelona = stm.StaticMap(3500, 3500)
 	# Draws all the nodes in the graph using 'x', 'y' information in edge
 	for id, data in g.nodes(data=True):
-		pos: Coord = (data['x'], data['y'])
-		marker = stm.CircleMarker(pos, data['color'], 2)
-		barcelona.add_marker(marker)
+		if data['poblacio'] == 'Barcelona':
+			pos: Coord = (data['x'], data['y'])
+			marker = stm.CircleMarker(pos, data['color'], 2)
+			barcelona.add_marker(marker)
     
 	# Draws all the edges using route information in edge
 	for u, v, data in g.edges(data=True):
-		line = stm.Line(data['route'], data['color'], 1)
-		barcelona.add_line(line)
+		if g.nodes[u]['poblacio'] == 'Barcelona' and g.nodes[v]['poblacio'] == 'Barcelona':
+			line = stm.Line(data['route'], data['color'], 1)
+			barcelona.add_line(line)
     
 	# Save image
 	image = barcelona.render()
@@ -128,19 +131,27 @@ def plot(g: CityGraph, filename: str) -> None:
 def plot_path(g: CityGraph, p: Path, filename: str) -> None:
 	""" Saves and shows a path of nodes as an image with the background city map in the specified file: filename, using staticmaps library """
     # Create a new map object
-	barcelona = stm.StaticMap(800, 600)
-	barcelona.center = (2.1873, 41.3838)
-
+	barcelona = stm.StaticMap(3500, 3500)
 	# Add the nodes form the path with the indecated attributes
-	for id in p:
-		pos: Coord = (g.nodes[id]['x'], g.nodes[id]['y'])
-		marker = stm.CircleMarker(pos, g.nodes[id]['color'], 2)
-		barcelona.add_marker(marker)
+	pos_start: Coord = (g.nodes[p[0]]['x'], g.nodes[p[0]]['y'])
+	start_marker = stm.CircleMarker(pos_start, g.nodes[p[0]]['color'], 7)
+	barcelona.add_marker(start_marker)
+	pos_end: Coord = (g.nodes[p[-1]]['x'], g.nodes[p[-1]]['y'])
+	end_marker = stm.CircleMarker(pos_end, g.nodes[p[-1]]['color'], 7)
+	barcelona.add_marker(end_marker)
 
 	# Add the lines connecting the nodes using the information in the edge u->v
 	for u,v in zip(p,p[1:]):
 		line = stm.Line(g[u][v]['route'], g[u][v]['color'], 4)
 		barcelona.add_line(line)
+  
+	# Add the nodes form the path with the indecated attributes
+	for id in p:
+		pos: Coord = (g.nodes[id]['x'], g.nodes[id]['y'])
+		marker = stm.CircleMarker(pos, g.nodes[id]['color'], 4)
+		outline = stm.CircleMarker(pos, 'black', 7)
+		barcelona.add_marker(outline)
+		barcelona.add_marker(marker)
 	
 	# Save image
 	image = barcelona.render()
@@ -148,4 +159,3 @@ def plot_path(g: CityGraph, p: Path, filename: str) -> None:
 	# Show image
 	image = Image.open(filename)
 	image.show()
-

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TypeAlias
+from typing import TypeAlias, Any
 from haversine import haversine
 from PIL import Image
 import staticmap as stm
@@ -9,14 +9,14 @@ import matplotlib.pyplot as plt
 
 
 BusesGraph : TypeAlias = nx.DiGraph
-Coord : TypeAlias = tuple[float, float] # (longitud, latitud)
+Coord : TypeAlias = tuple[float, float] #(longitud, latitud)
 
 @dataclass
 class Stop: 
     """ Dataclass representing a bus stop"""
     code: str # id used to identify the bus stop, unique to each route 
     name: str 
-    address: str 
+    poblacio: str 
     pos: Coord # Coordinates in (longitud, latitud)
     dist_prev: float # distance between current stop and the previous on the same line
 
@@ -68,14 +68,19 @@ class BusLine:
 class NetworkBus:
     """ Class to represent the set of bus lines"""
     _busLines: dict[int, BusLine] # id of the bus line -> BusLine 
+    _dupeStops: dict[int, list[str]]
 
     def __init__(self) -> None:
         """ Constructor of the class creates an empty dictionary """
         self._busLines = dict()
+        self._dupeStops = dict()
 
     ######################## GETTERS ################################
     def busLines(self) -> dict[int, BusLine]:
         return self._busLines
+    
+    def dupeStops(self) -> dict[int, list[str]]:
+        return self._dupeStops
 
     ######################## FUNCTIONS ################################
     def addBusLine(self, line: BusLine) -> None:
@@ -83,7 +88,7 @@ class NetworkBus:
         assert line.id() not in self._busLines, str(line.id())+' already added' #error message
         self.busLines()[line.id()] = line
     
-    def getBusLine(self, id_route: int) -> dict[int, BusLine]:
+    def getBusLine(self, id_route: int) -> BusLine:
         """ Given the id of a bus line, returns that busline if it is in network """
         assert id_route in self.busLines(), str(id_route)+' not in network' #error message
         return self.busLines()[id_route]
@@ -95,20 +100,32 @@ def dist(x: Coord, y: Coord) -> float:  #lon, lat
     return haversine((x[1], x[0]), (y[1], y[0]), unit='m') #we flip them because harversine function uses invers (lat, lon)
 
 
+def brighter_color(hex_color):
+    # Convert the hexadecimal color to RGB
+    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+    # Calculate brighter color values
+    r = min(int(r * 1.2), 255)
+    g = min(int(g * 1.2), 255)
+    b = min(int(b * 1.2), 255)
+
+    # Convert the brighter RGB values back to hexadecimal
+    return '{:02x}{:02x}{:02x}'.format(r, g, b)
+
 def create_network_base() -> NetworkBus:
     """ Creates the template for the NetworkBus class. aka creates all the buslines extracted form json but with no information """
     # We open the file and read it
     with open("busRoutes.json", "r") as file:
         json_data: str = file.read()
-    TMBdata: json = json.loads(json_data)
+    TMBdata = json.loads(json_data)
 
     # Iterating through each route and getting all information needed to inicialize the route, we add it to the NetworkBus class
     network = NetworkBus()
     for route in TMBdata['features']: # Iterating over routes in json file
-        id: int = int(route['properties']['ID_RECORREGUT'])
-        name: str = str(route['properties']['NOM_LINIA'] + ' - ' + route['properties']['DESC_PAQUET']+' ('+route['properties']['DESC_SENTIT']+")")
-        color: str = str(route['properties']['COLOR_REC'])
-        NewLine: BusLine = BusLine(id, name, color) # Create new busline
+        id: int = route['properties']['ID_RECORREGUT']
+        name: str = route['properties']['NOM_LINIA'] + ' - ' + route['properties']['DESC_PAQUET']+' ('+route['properties']['DESC_SENTIT']+")"
+        color: str = route['properties']['COLOR_REC']
+        NewLine = BusLine(id, name, color) # Create new busline
         network.addBusLine(NewLine)
 
     return network
@@ -119,12 +136,12 @@ def get_route_json(json_file: str, network: NetworkBus) -> NetworkBus:
     # We open the file and read it
     with open(json_file, "r") as file:
         json_data: str = file.read()
-    TMBdata: json = json.loads(json_data)
+    TMBdata = json.loads(json_data)
 
     # Iterating through we get the list of coordinates indicating the path the busline takes and adding them to the coorrespoinding bus line
     for route in TMBdata['features']: #iterating over routes in json file
         id: int = int(route['properties']['ID_RECORREGUT'])
-        path: list[Coord] =  [tuple(lst) for lst in route['geometry']['coordinates'][0]] # We do this to avoid type errors
+        path: list[Coord] = route['geometry']['coordinates'][0] # We do this to avoid type errors
         network.getBusLine(id).setRoute(path)
         
     return network
@@ -134,21 +151,23 @@ def get_stops_json(json_file: str, network: NetworkBus) -> NetworkBus:
     """ Adds the information of all the stops in each bus line to the NetworkBus passed by reference """
     # We open the file and read it
     with open(json_file, "r") as file:
-        json_data = file.read()
+        json_data: str = file.read()
     TMBdata = json.loads(json_data)
 
 
     # We iterate through the stops getting all the information we need to inicialize them. Then add them to the corresponding bus line
     for stop in TMBdata['features']:
-        id: int = int(stop['properties']['ID_RECORREGUT']) # id of the busroute to which the stop belongs
+        id: int = stop['properties']['ID_RECORREGUT'] # id of the busroute to which the stop belongs
         # We fetch all information we need to create stop
-        code: str = str(stop['properties']['CODI_PARADA'])
-        name: str = str(stop['properties']['NOM_PARADA'])
-        address: str = str(stop['properties']['ADRECA'])
-        pos: Coord = tuple(stop['geometry']['coordinates'])
-        dist_prev: float = float(stop['properties']['DISTANCIA_PAR_ANTERIOR'])
+        code: int = stop['properties']['CODI_PARADA']
+        name: str = stop['properties']['NOM_PARADA']
+        poblacio: str = stop['properties']['NOM_POBLACIO']
+        pos: Coord = (stop['geometry']['coordinates'])
+        dist_prev: float = stop['properties']['DISTANCIA_PAR_ANTERIOR']
 
-        NewStop: Stop = Stop(code+"-"+str(id) , name, address, pos, dist_prev)
+        if code in network.dupeStops(): network.dupeStops()[code].append(str(code)+"-"+str(id))
+        else: network.dupeStops()[code] = [str(code)+"-"+str(id)]
+        NewStop = Stop(str(code)+"-"+str(id) , name, poblacio, pos, dist_prev)
         network.getBusLine(id).addStop(NewStop) #bus stops all apear in oreder 
     
     return network
@@ -187,9 +206,9 @@ def get_buses_from_network(network: NetworkBus) -> BusesGraph:
             graph.add_node(
                 s.code, # We use code atribute to idintefy each stop
                 name = s.name, # Name of the stop
-                address=s.address, # Address of the stop
+                poblacio=s.poblacio, # poblacio of the stop
                 x=s.pos[0], y=s.pos[1],  # Postionion of the stop (lon lat)
-                color="#"+busline.color() # Color coresponding to bus line
+                color="#"+brighter_color(busline.color()) # Color coresponding to bus line
             ) 
                 
         index: int = 0
@@ -213,8 +232,10 @@ def get_buses_from_network(network: NetworkBus) -> BusesGraph:
                 src.code, dst.code, # start and end id of nodes
                 route=[src.pos]+route_between+[dst.pos],  # Path it takes to go from stops
                 length=dst.dist_prev/8.33,  # Aproximation of time it takes (we assume average speed 30km/h)
-                color="#"+busline.color() # Color corresponding to the bus line
+                color="#"+brighter_color(busline.color()) # Color corresponding to the bus line
             )
+            
+            
     return graph
 
 
@@ -227,7 +248,7 @@ def get_buses_graph() -> BusesGraph:
 def show(g: BusesGraph) -> None:
     """ Shows the directed graph using networkx.draw """
     # We extrat the position of each node and create a dictionary
-    pos: dict[str, float] = {node: (data['x'], data['y']) for node, data in g.nodes(data=True)}
+    pos: dict[Any, Coord] = {node : (data['x'], data['y']) for node, data in g.nodes(data=True)}
     # Using the dictionary representing position we plot the graph
     nx.draw(g, pos, with_labels=False, node_color='lightblue', edge_color='gray', node_size = 1)
     plt.show()
@@ -235,18 +256,16 @@ def show(g: BusesGraph) -> None:
 def plot(g: BusesGraph, nom_fitxer: str) -> None:
     """ Saves and shows the graph as an image with the background city map in the specified file: nom_fitxer, using staticmaps library """
     # Create a new map object
-    barcelona = stm.StaticMap(800, 600)
-    barcelona.center = (2.1734, 41.3851)
-    
+    barcelona = stm.StaticMap(3500, 3500)
     # Draws all the nodes in the graph using 'x', 'y' information in edge
     for id, data in g.nodes(data=True):
         pos: Coord = (data['x'], data['y'])
-        marker = stm.CircleMarker(pos, data['color'], 2)
+        marker = stm.CircleMarker(pos, data['color'], 5)
         barcelona.add_marker(marker)
     
     # Draws all the edges using route information in edge
     for u, v, data in g.edges(data=True):
-        line = stm.Line(data['route'], data['color'], 1)
+        line = stm.Line(data['route'], data['color'], 3)
         barcelona.add_line(line)
     
     # Save image
@@ -260,9 +279,7 @@ def plot(g: BusesGraph, nom_fitxer: str) -> None:
 def plot_BusLine(g: BusesGraph, id_line: str, nom_fitxer: str) -> None:
     """ Saves and shows just a bus line of the graph as an image with the background city map in the specified file: nom_fitxer, using staticmaps library """
     # Create a new map object
-    barcelona = stm.StaticMap(800, 600)
-    barcelona.center = (2.1734, 41.3851)
-    
+    barcelona = stm.StaticMap(3500, 3500)
     # Draws all the nodes that belong to the route using that the original stop.code was composed of: stop_id+"-"+route_id
     for id, data in g.nodes(data=True):
         if id.split("-")[1] != id_line: continue
@@ -282,6 +299,3 @@ def plot_BusLine(g: BusesGraph, id_line: str, nom_fitxer: str) -> None:
     # Show image
     image = Image.open(nom_fitxer)
     image.show()
-
-g = get_buses_graph()
-show(g)
