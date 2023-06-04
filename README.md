@@ -71,5 +71,4 @@ Aquesta és la versió 1.0 del projecte.
 * **Roger Bargalló Roselló** - *1r GCED* - [Github](https://github.com/rbargallor)
 
 ## Llicència
-Aquest projecte està sota la llicència del MIT - see the [LICENSE.md](LICENSE.md) file for details
-
+Aquest projecte està sota la llicència del MIT
