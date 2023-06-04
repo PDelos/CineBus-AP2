@@ -3,7 +3,7 @@ Segona pràctica d'AP2 - CineBus - GCED - UPC
 
 Basat en la [pràctica 2 d'ap2 2023](https://github.com/jordi-petit/ap2-cinebus-2023)
 
-## Descripció
+### Descripció
 
 Aquesta pràctica ofereix una aplicació desenvolupada en Python, que donada una película en un cinema de Barcelona, proporciona el camí més curt per arribar a l'hora a veure la película utilitzant el bus.
 L'aplicació funciona de forma interactiva, i és senzilla d'entendre per l'usuari.
@@ -36,6 +36,15 @@ tkinter
 Per executar el programa cal la comanda ```python3 demo.py``` i tenir connexió a internet.
 En algunes ocasions es pot donar un error en executar el mòdul per una mala sincronització amb la web de la cartellera de cinemes de Barcelona, si això succeeix es pot tornar a provar d'executar el mòdul.
 
+### Instruccions d'ús
+
+Un cop tinguem la finestra principal del programa cal seguir els següents passos:
+* Prémer els botons fetch buses i fetch city, que carreguen els grafs de busos i de la ciutat.
+* Seleccionar pel·lícula de la llista que apareixerà en el requadre superior, en cas que no surti cap llista prémer el botó Update Movies.
+* Si volem veure la película en versió original cal marcar la casella Original Language.
+* A continuació cal escriure l'adreça o les coordenades des d'on volem sortir per anar al cine i prémer Find.
+* Ens apareixerà una imatge amb la ruta que haurem de fer.
+
 ## Canvis respecte el projecte original
 
 Respecte a la idea original de la pràctica s'han fet els següents canvis amb autorització del professorat:
@@ -47,14 +56,6 @@ Respecte a la idea original de la pràctica s'han fet els següents canvis amb a
 * S'ha implementat una funció per mostrar el recorregut d'una línia concreta de bus de Barcelona.
 * S'ha assignat el color corresponent a cada línia de bus.
 
-### Instruccions
-
-Un cop tinguem la finestra principal del programa cal seguir els següents passos:
-* Prémer els botons fetch buses i fetch city, que carreguen els grafs de busos i de la ciutat.
-* Seleccionar pel·lícula de la llista que apareixerà en el requadre superior, en cas que no surti cap llista prémer el botó Update Movies.
-* Si volem veure la película en versió original cal marcar la casella Original Language.
-* A continuació cal escriure l'adreça o les coordenades des d'on volem sortir per anar al cine i prémer Find.
-* Ens apareixerà una imatge amb la ruta que haurem de fer.
 
 ### Estil de codi
 
