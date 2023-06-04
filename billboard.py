@@ -92,7 +92,7 @@ def get_cinemas() -> dict[str, Cinema]:
     # Contains the street where a certain theatre is located
     theatre_address: dict[str, str] = dict()
 
-    for i in range(1, 4):
+    for i in range(1, 3):
 
         urlToScrape: str = "https://www.sensacine.com/cines/cines-en-72480/?page=" + \
             str(i)
@@ -126,7 +126,7 @@ def get_films() -> dict[str, Film]:
 
     film_dict = dict()
 
-    for i in range(1, 4):
+    for i in range(1, 3):
 
         urlToScrape = "https://www.sensacine.com/cines/cines-en-72480/?page=" + \
             str(i)
