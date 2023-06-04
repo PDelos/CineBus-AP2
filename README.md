@@ -39,22 +39,22 @@ En algunes ocasions es pot donar un error a l'executar el mòdul per una mala si
 ## Canvis respecte el projecte original
 
 Respecte la idea original de la pràctica s'han fet els següents canvis amb autorització del professorat:
-S'ha considerat el graf de buses i de city com dirigit, per tal de simular de forma més acurada les rutes.
-S'ha posat certa velocitat diferent en els trossos de ruta a peu i en bus, per tal de garantir que sempre s'agafa el camí més ràpid.
-S'ha assignat un temps d'espera a cada parada, ja que agafar el bus de forma instantània no és realista.
-S'ha agafat un json de AMB que conté informació real de les rutes dels busos, per tal de mostrar el recorregut real.
-Hem utilizat una llibreria per mostrar el programa en una interfície gràfica i fer-lo més amigable i intuitiu per l'usuari.
-S'ha implementat una funció per mostrar el recorregut d'una línia concreta de bus de Barcelona.
-S'ha assignat el color corresponent a cada línia de bus.
+* S'ha considerat el graf de buses i de city com dirigit, per tal de simular de forma més acurada les rutes.
+* S'ha posat certa velocitat diferent en els trossos de ruta a peu i en bus, per tal de garantir que sempre s'agafa el camí més ràpid.
+* S'ha assignat un temps d'espera a cada parada, ja que agafar el bus de forma instantània no és realista.
+* S'ha agafat un json de AMB que conté informació real de les rutes dels busos, per tal de mostrar el recorregut real.
+* Hem utilizat una llibreria per mostrar el programa en una interfície gràfica i fer-lo més amigable i intuitiu per l'usuari.
+* S'ha implementat una funció per mostrar el recorregut d'una línia concreta de bus de Barcelona.
+* S'ha assignat el color corresponent a cada línia de bus.
 
 ### Instruccions
 
 Un cop tinguem la finestra principal del programa cal seguir els següents passos:
-Premer els botons fetch buses i fetch city, que carreguen els grafs de busos i de la ciutat.
-Seleccionar pelicula de la llista que apareixerà en el requadre superior, en cas de que no surti cap llista apretar el botó Update Movies.
-Si volem veure la película en versió original cal marcar la casella Original Language.
-A continuació cal escriure l'adreça o les coordenades des d'on volem sortir per anar al cine i premer Find.
-Ens apareixerà una imatge amb la ruta que haurem de fer.
+* Premer els botons fetch buses i fetch city, que carreguen els grafs de busos i de la ciutat.
+* Seleccionar pelicula de la llista que apareixerà en el requadre superior, en cas de que no surti cap llista apretar el botó Update Movies.
+* Si volem veure la película en versió original cal marcar la casella Original Language.
+* A continuació cal escriure l'adreça o les coordenades des d'on volem sortir per anar al cine i premer Find.
+* Ens apareixerà una imatge amb la ruta que haurem de fer.
 
 ### Estil de codi
 
